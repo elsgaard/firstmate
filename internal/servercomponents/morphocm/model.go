@@ -1,4 +1,4 @@
-package F5Exporter
+package morphocm
 
 import (
 	"fmt"
@@ -13,12 +13,12 @@ import (
 type Model struct{}
 
 func (m Model) Deploy(server internal.Server) error {
-	log.Printf("▶ Starting F5LTM Exporter deploy on %s", server.FQDN)
+	log.Printf("▶ Starting morpho cm deploy on %s", server.FQDN)
 	return m.executeRemoteCommands(server, m.getInstallCommands())
 }
 
 func (m Model) Update(server internal.Server) error {
-	log.Printf("▶ Starting F5LTM Exporter update on %s", server.FQDN)
+	log.Printf("▶ Starting morpho cm update on %s", server.FQDN)
 	return m.executeRemoteCommands(server, m.getUpdateCommands())
 }
 
@@ -46,29 +46,31 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
 	}
 
-	log.Println("✅ F5LTM Exporter operation completed successfully")
+	log.Println("✅ morpho cm operation completed successfully")
 	return nil
 }
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"sudo systemctl stop f5ltm_exporter.service",
-		"git -C /opt/f5ltm_exporter fetch origin main",
-		"git -C /opt/f5ltm_exporter reset --hard origin/main",
-		"cd /opt/f5ltm_exporter && sudo make build",
+		"sudo systemctl stop morphocm.service",
+		"git -C /opt/morphocm fetch --all --tags",
+		"git -C /opt/morphocm reset --hard origin/main",
+		"cd /opt/morphocm && sudo make build",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
-		"sudo systemctl restart f5ltm_exporter.service",
+		"sudo systemctl restart morphocm.service",
 	}
 }
 
 func (m Model) getInstallCommands() []string {
 	return []string{
-		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/f5ltm_exporter.git",
-		"cd /opt/f5ltm_exporter && sudo make build",
+		"sudo apt-get install build-essential",
+		"sudo apt install golang-go -y",
+		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/morphocm.git",
+		"cd /opt/morphocm && sudo make build",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
-		"sudo systemctl enable --now f5ltm_exporter.service",
+		"sudo systemctl enable --now morphocm.service",
 	}
 }
 
@@ -82,9 +84,9 @@ func (m Model) checkCustomAction(action string) string {
 
 // CreateUnitFile returns a properly escaped heredoc for remote tee.
 func (m Model) createUnitFile() string {
-	return `sudo bash -c 'cat > /etc/systemd/system/f5ltm_exporter.service <<EOF
+	return `sudo bash -c 'cat > /etc/systemd/system/morphocm.service <<EOF
 [Unit]
-Description=F5 LTM Exporter Service
+Description=Morpho CM Change Management Service
 After=network.target
 StartLimitIntervalSec=0
 
@@ -93,8 +95,8 @@ Type=simple
 Restart=always
 RestartSec=1
 User=root
-WorkingDirectory=/opt/f5ltm_exporter
-ExecStart=/opt/f5ltm_exporter/f5ltmexporterserver --f5-user=monitoring --f5-pass=TrueCom2024 --tls-skip-verify=true
+WorkingDirectory=/opt/morphocm
+ExecStart=/opt/morphocm/morphocm --port=8089
 
 [Install]
 WantedBy=multi-user.target

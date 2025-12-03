@@ -3,7 +3,6 @@ package servercomponents
 
 import (
 	"github.com/elsgaard/firstmate/internal"
-	_ "github.com/elsgaard/firstmate/internal"
 )
 
 type Component interface {

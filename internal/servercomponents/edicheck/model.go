@@ -1,4 +1,4 @@
-package F5Exporter
+package edicheck
 
 import (
 	"fmt"
@@ -13,12 +13,12 @@ import (
 type Model struct{}
 
 func (m Model) Deploy(server internal.Server) error {
-	log.Printf("▶ Starting F5LTM Exporter deploy on %s", server.FQDN)
+	log.Printf("▶ Starting edicheck deploy on %s", server.FQDN)
 	return m.executeRemoteCommands(server, m.getInstallCommands())
 }
 
 func (m Model) Update(server internal.Server) error {
-	log.Printf("▶ Starting F5LTM Exporter update on %s", server.FQDN)
+	log.Printf("▶ Starting edicheck update on %s", server.FQDN)
 	return m.executeRemoteCommands(server, m.getUpdateCommands())
 }
 
@@ -46,29 +46,32 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
 	}
 
-	log.Println("✅ F5LTM Exporter operation completed successfully")
+	log.Println("✅ edicheck operation completed successfully")
 	return nil
 }
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"sudo systemctl stop f5ltm_exporter.service",
-		"git -C /opt/f5ltm_exporter fetch origin main",
-		"git -C /opt/f5ltm_exporter reset --hard origin/main",
-		"cd /opt/f5ltm_exporter && sudo make build",
+		"sudo systemctl stop edicheck.service",
+		"git -C /opt/edicheck fetch --all --tags",
+		"git -C /opt/edicheck reset --hard origin/main",
+		"cd /opt/edicheck && sudo make build",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
-		"sudo systemctl restart f5ltm_exporter.service",
+		"sudo systemctl restart edicheck.service",
 	}
 }
 
 func (m Model) getInstallCommands() []string {
 	return []string{
-		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/f5ltm_exporter.git",
-		"cd /opt/f5ltm_exporter && sudo make build",
+		"sudo apt-get install build-essential -y",
+		"sudo apt install golang-go -y",
+		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/edicheck.git",
+		"cd /opt/edicheck && sudo make build",
+		"mkdir -p /etc/edicheck",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
-		"sudo systemctl enable --now f5ltm_exporter.service",
+		"sudo systemctl enable --now edicheck.service",
 	}
 }
 
@@ -82,19 +85,18 @@ func (m Model) checkCustomAction(action string) string {
 
 // CreateUnitFile returns a properly escaped heredoc for remote tee.
 func (m Model) createUnitFile() string {
-	return `sudo bash -c 'cat > /etc/systemd/system/f5ltm_exporter.service <<EOF
+	return `sudo bash -c 'cat > /etc/systemd/system/edicheck.service <<EOF
 [Unit]
-Description=F5 LTM Exporter Service
-After=network.target
-StartLimitIntervalSec=0
+Description=EDICheck
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=simple
+WorkingDirectory=/opt/edicheck
+ExecStart=/opt/edicheck/edicheckd --config-file=/etc/edicheck/config.yaml --etcd-endpoints "http://10.15.91.217:2379,http://10.15.91.231:2379,http://10.15.91.215:2379"
+
 Restart=always
-RestartSec=1
-User=root
-WorkingDirectory=/opt/f5ltm_exporter
-ExecStart=/opt/f5ltm_exporter/f5ltmexporterserver --f5-user=monitoring --f5-pass=TrueCom2024 --tls-skip-verify=true
 
 [Install]
 WantedBy=multi-user.target
