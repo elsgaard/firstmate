@@ -68,6 +68,7 @@ func (m Model) getInstallCommands() []string {
 		"sudo apt install golang-go -y",
 		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/sftrip.git",
 		"cd /opt/sftrip && sudo make build",
+		"mkdir -p /etc/sftrip",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
 		"sudo systemctl enable --now sftrip.service",
