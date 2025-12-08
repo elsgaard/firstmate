@@ -9,6 +9,7 @@ import (
 	"github.com/elsgaard/firstmate/internal/servercomponents/morphocm"
 	"github.com/elsgaard/firstmate/internal/servercomponents/prometheus"
 	"github.com/elsgaard/firstmate/internal/servercomponents/sftrip"
+	"github.com/elsgaard/firstmate/internal/servercomponents/ubuntu"
 )
 
 var Registry = map[string]func() Component{
@@ -19,4 +20,5 @@ var Registry = map[string]func() Component{
 	"prometheus":   func() Component { return prometheus.Model{} },
 	"sftrip":       func() Component { return sftrip.Model{} },
 	"edicheck":     func() Component { return edicheck.Model{} },
+	"ubuntu":       func() Component { return ubuntu.Model{} },
 }
