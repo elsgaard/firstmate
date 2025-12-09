@@ -3,6 +3,7 @@ package servercomponents
 
 import (
 	"github.com/elsgaard/firstmate/internal/servercomponents/F5Exporter"
+	"github.com/elsgaard/firstmate/internal/servercomponents/alertboard"
 	"github.com/elsgaard/firstmate/internal/servercomponents/alerthistory"
 	"github.com/elsgaard/firstmate/internal/servercomponents/alertmanager"
 	"github.com/elsgaard/firstmate/internal/servercomponents/edicheck"
@@ -21,4 +22,5 @@ var Registry = map[string]func() Component{
 	"sftrip":       func() Component { return sftrip.Model{} },
 	"edicheck":     func() Component { return edicheck.Model{} },
 	"ubuntu":       func() Component { return ubuntu.Model{} },
+	"alertboard":   func() Component { return alertboard.Model{} },
 }
