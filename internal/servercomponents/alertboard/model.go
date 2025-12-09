@@ -55,7 +55,7 @@ func (m Model) getUpdateCommands() []string {
 		"sudo systemctl stop alertboard.service",
 		"git -C /opt/alertboard fetch --all --tags",
 		"git -C /opt/alertboard reset --hard origin/main",
-		"cd /opt/sftrip && sudo make build",
+		"cd /opt/alertboard && sudo make build",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
 		"sudo systemctl restart alertboard.service",
