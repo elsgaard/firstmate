@@ -97,7 +97,7 @@ Restart=always
 RestartSec=1
 User=root
 WorkingDirectory=/opt/alerthistory
-ExecStart=/opt/alerthistory/alerthistoryserver --port 8082
+ExecStart=/opt/alerthistory/alerthistoryserver --port=8082 --db-path=/var/lib/alerthistory/alerthistory.db
 
 [Install]
 WantedBy=multi-user.target
