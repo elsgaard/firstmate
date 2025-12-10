@@ -69,6 +69,8 @@ func (m Model) getInstallCommands() []string {
 		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/certmanager.git",
 		"cd /opt/certmanager && sudo make build",
 		"mkdir -p /etc/certmanager",
+		"mkdir -p /var/lib/certmanager",
+		"chmod 700 /var/lib/certmanager",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
 		"sudo systemctl enable --now certmanager.service",
