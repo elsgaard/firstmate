@@ -99,7 +99,7 @@ Restart=always
 RestartSec=1
 User=root
 WorkingDirectory=/opt/morphocm
-ExecStart=/opt/morphocm/morphocm --port=8089
+ExecStart=/opt/morphocm/morphocm --port=8089 --db-path=/var/lib/morphocm/morphocm.db
 
 [Install]
 WantedBy=multi-user.target

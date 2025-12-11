@@ -99,7 +99,7 @@ Restart=always
 RestartSec=1
 User=root
 WorkingDirectory=/opt/certmanager
-ExecStart=/opt/certmanager/certmanager --port=8081
+ExecStart=/opt/certmanager/certmanager --port=8081 --db-path=/var/lib/certmanager/certmanager.db
 
 [Install]
 WantedBy=multi-user.target
