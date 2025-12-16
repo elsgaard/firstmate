@@ -52,26 +52,28 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"apt-get update -y",
-		"apt-get upgrade -y",
+		"apt update -y",
+		"apt upgrade -y",
+		"apt install sqlite3 -y",
 	}
 }
 
 func (m Model) getInstallCommands() []string {
 	return []string{
-		"apt-get update -y",
-		"apt-get upgrade -y",
+		"apt update -y",
+		"apt upgrade -y",
+		"apt install sqlite3 -y",
 		"mkdir -p /etc/systemd/timesyncd.conf.d",
 		"CUSTOM: CreateNTPFile",
 		"timedatectl set-timezone Europe/Copenhagen",
-		"sudo systemctl restart systemd-timesyncd",
+		"systemctl restart systemd-timesyncd",
 		"timedatectl status",
 		"timedatectl show-timesync --all",
 		"systemctl mask --now fwupd.service",
 		"systemctl mask --now fwupd-refresh.service",
 		"systemctl mask --now fwupd-refresh.timer",
 		"rm -f /etc/resolv.conf",
-		"sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf",
+		"ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf",
 	}
 }
 

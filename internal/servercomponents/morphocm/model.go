@@ -52,28 +52,29 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"sudo systemctl stop morphocm.service",
+		"cd /opt/morphocm/ && ./morph-tool",
+		"systemctl stop morphocm.service",
 		"git -C /opt/morphocm fetch --all --tags",
 		"git -C /opt/morphocm reset --hard origin/main",
 		"cd /opt/morphocm && sudo make build",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl restart morphocm.service",
+		"systemctl daemon-reload",
+		"systemctl restart morphocm.service",
 	}
 }
 
 func (m Model) getInstallCommands() []string {
 	return []string{
-		"sudo apt-get install build-essential",
-		"sudo apt install golang-go -y",
+		"apt-get install build-essential",
+		"apt install golang-go -y",
 		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/morphocm.git",
 		"cd /opt/morphocm && sudo make build",
 		"mkdir -p /etc/morphocm",
 		"mkdir -p /var/lib/morphocm",
-		"chmod 700 /var/lib/morphocm",
+		"chmod 755 /var/lib/morphocm",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl enable --now morphocm.service",
+		"systemctl daemon-reload",
+		"systemctl enable --now morphocm.service",
 	}
 }
 

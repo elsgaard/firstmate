@@ -52,6 +52,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
+		"cd /opt/alerthistory/ && ./morph-tool",
 		"sudo systemctl stop alerthistory.service",
 		"git -C /opt/alerthistory fetch origin main",
 		"git -C /opt/alerthistory reset --hard origin/main",
@@ -68,7 +69,7 @@ func (m Model) getInstallCommands() []string {
 		"cd /opt/alerthistory && sudo make build",
 		"mkdir -p /etc/alerthistory",
 		"mkdir -p /var/lib/alerthistory",
-		"chmod 700 /var/lib/alerthistory",
+		"chmod 755 /var/lib/alerthistory",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
 		"sudo systemctl enable --now alerthistory.service",

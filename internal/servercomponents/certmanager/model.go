@@ -52,6 +52,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
+		"cd /opt/certmanager/ && ./morph-tool",
 		"sudo systemctl stop certmanager.service",
 		"git -C /opt/certmanager fetch --all --tags",
 		"git -C /opt/certmanager reset --hard origin/main",
@@ -70,7 +71,7 @@ func (m Model) getInstallCommands() []string {
 		"cd /opt/certmanager && sudo make build",
 		"mkdir -p /etc/certmanager",
 		"mkdir -p /var/lib/certmanager",
-		"chmod 700 /var/lib/certmanager",
+		"chmod 755 /var/lib/certmanager",
 		"CUSTOM: CreateUnitFile",
 		"sudo systemctl daemon-reload",
 		"sudo systemctl enable --now certmanager.service",
@@ -99,7 +100,7 @@ Restart=always
 RestartSec=1
 User=root
 WorkingDirectory=/opt/certmanager
-ExecStart=/opt/certmanager/certmanager --port=8081 --db-path=/var/lib/certmanager/certmanager.db
+ExecStart=/opt/certmanager/certmanager --port=8087 --db-path=/var/lib/certmanager/certmanager.db
 
 [Install]
 WantedBy=multi-user.target
