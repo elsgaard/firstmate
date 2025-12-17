@@ -59,10 +59,8 @@ func (m Model) getUpdateCommands() []string {
 
 func (m Model) getInstallCommands() []string {
 	return []string{
-		"apt update -y",
-		"apt upgrade -y",
-		"apt install build-essential -y",
-		"apt install golang-go sqlite3 -y",
+		"apt update -y && apt upgrade -y",
+		"apt install build-essential golang-go sqlite3 -y",
 		"git config --global credential.helper store",
 		"mkdir -p /etc/systemd/timesyncd.conf.d",
 		"CUSTOM: CreateNTPFile",
