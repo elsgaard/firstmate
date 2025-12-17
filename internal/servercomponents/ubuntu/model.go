@@ -52,14 +52,14 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"apt update -y && apt upgrade -y",
+		"apt-get update -y && apt-get upgrade -y",
 	}
 }
 
 func (m Model) getInstallCommands() []string {
 	return []string{
-		"apt update -y && apt upgrade -y",
-		"apt install build-essential golang-go sqlite3 -y",
+		"apt-get update -y && apt upgrade -y",
+		"apt-get install build-essential golang-go sqlite3 -y",
 		"git config --global credential.helper store",
 		"mkdir -p /etc/systemd/timesyncd.conf.d",
 		"CUSTOM: CreateNTPFile",
