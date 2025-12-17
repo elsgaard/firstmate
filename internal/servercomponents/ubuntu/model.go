@@ -52,8 +52,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"apt update -y",
-		"apt upgrade -y",
+		"apt update -y && apt upgrade -y",
 	}
 }
 
