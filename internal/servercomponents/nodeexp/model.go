@@ -54,7 +54,7 @@ func (m Model) getUpdateCommands() []string {
 	return []string{
 		"CUSTOM: CreateUnitFile",
 		"systemctl daemon-reload",
-		"systemctl restart prometheus",
+		"systemctl restart node_exporter",
 	}
 }
 
