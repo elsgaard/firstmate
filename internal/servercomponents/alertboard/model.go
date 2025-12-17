@@ -14,7 +14,7 @@ type Model struct{}
 
 func (m Model) Deploy(server internal.Server) error {
 	log.Printf("▶ Starting alertboard deploy on %s", server.FQDN)
-	return m.executeRemoteCommands(server, m.getInstallCommands())
+	return m.executeRemoteCommands(server, m.getInstallCommands(server))
 }
 
 func (m Model) Update(server internal.Server) error {
@@ -40,7 +40,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 			continue // `return err` to fail-fast, for now just continue
 		}
 		if len(out) > 0 {
-			log.Printf("Output: %s", strings.TrimSpace(string(out)))
+			log.Printf("→ Output: %s", strings.TrimSpace(string(out)))
 		}
 
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
@@ -52,25 +52,23 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"sudo systemctl stop alertboard.service",
+		"systemctl stop alertboard.service",
 		"git -C /opt/alertboard fetch --all --tags",
 		"git -C /opt/alertboard reset --hard origin/main",
-		"cd /opt/alertboard && sudo make build",
+		"cd /opt/alertboard && make build",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl restart alertboard.service",
+		"systemctl daemon-reload",
+		"systemctl restart alertboard.service",
 	}
 }
 
-func (m Model) getInstallCommands() []string {
+func (m Model) getInstallCommands(server internal.Server) []string {
 	return []string{
-		"sudo apt-get install build-essential -y",
-		"sudo apt install golang-go -y",
-		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/alertboard.git",
-		"cd /opt/alertboard && sudo make build",
+		gitCloneCommand(server, "TRUECOMMERCEDK/alertboard"),
+		"cd /opt/alertboard && make build",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl enable --now alertboard.service",
+		"systemctl daemon-reload",
+		"systemctl enable --now alertboard.service",
 	}
 }
 
@@ -101,4 +99,13 @@ ExecStart=/opt/alertboard/alertboard
 [Install]
 WantedBy=multi-user.target
 EOF'`
+}
+
+func gitCloneCommand(s internal.Server, repo string) string {
+	return fmt.Sprintf(
+		"cd /opt && git clone https://%s:%s@github.com/%s.git",
+		s.GHUser,
+		s.GHPass,
+		repo,
+	)
 }

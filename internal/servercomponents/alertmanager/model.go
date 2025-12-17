@@ -40,7 +40,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 			continue // `return err` to fail-fast, for now just continue
 		}
 		if len(out) > 0 {
-			log.Printf("Output: %s", strings.TrimSpace(string(out)))
+			log.Printf("→ Output: %s", strings.TrimSpace(string(out)))
 		}
 
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands

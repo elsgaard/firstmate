@@ -1,4 +1,4 @@
-package journexd
+package nodeexp
 
 import (
 	"fmt"
@@ -13,12 +13,12 @@ import (
 type Model struct{}
 
 func (m Model) Deploy(server internal.Server) error {
-	log.Printf("▶ Starting journexd deploy on %s", server.FQDN)
-	return m.executeRemoteCommands(server, m.getInstallCommands(server))
+	log.Printf("▶ Starting Node Exporter deploy on %s", server.FQDN)
+	return m.executeRemoteCommands(server, m.getInstallCommands())
 }
 
 func (m Model) Update(server internal.Server) error {
-	log.Printf("▶ Starting journexd update on %s", server.FQDN)
+	log.Printf("▶ Starting Node Exporter update on %s", server.FQDN)
 	return m.executeRemoteCommands(server, m.getUpdateCommands())
 }
 
@@ -46,33 +46,26 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
 	}
 
-	log.Println("✅ journexd operation completed successfully")
+	log.Println("✅ Node Exporter operation completed successfully")
 	return nil
 }
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"sudo systemctl stop journexd.service",
-		"git -C /opt/journexd fetch --all --tags",
-		"git -C /opt/journexd reset --hard origin/main",
-		"cd /opt/journexd && make build",
 		"CUSTOM: CreateUnitFile",
 		"systemctl daemon-reload",
-		"systemctl restart journexd.service",
+		"systemctl restart prometheus",
 	}
 }
 
-func (m Model) getInstallCommands(server internal.Server) []string {
+func (m Model) getInstallCommands() []string {
 	return []string{
-		gitCloneCommand(server, "TRUECOMMERCEDK/journexd"),
-		"cd /opt/journexd && make build",
-		"mkdir -p /etc/journexd",
-		"mkdir -p /etc/journex",
-		"mkdir -p /var/lib/journexd",
-		"chmod 755 /var/lib/journexd",
+		"wget -q https://github.com/prometheus/node_exporter/releases/download/v1.10.2/node_exporter-1.10.2.linux-amd64.tar.gz",
+		"tar -xvf node_exporter-1.10.2.linux-amd64.tar.gz",
+		"cd node_exporter-1.10.2.linux-amd64 && mv node_exporter /usr/local/bin/",
 		"CUSTOM: CreateUnitFile",
 		"systemctl daemon-reload",
-		"systemctl enable --now journexd.service",
+		"systemctl enable --now node_exporter.service",
 	}
 }
 
@@ -86,30 +79,19 @@ func (m Model) checkCustomAction(action string) string {
 
 // CreateUnitFile returns a properly escaped heredoc for remote tee.
 func (m Model) createUnitFile() string {
-	return `sudo bash -c 'cat > /etc/systemd/system/journexd.service <<EOF
+	return `sudo bash -c 'cat > /etc/systemd/system/node_exporter.service <<EOF
 [Unit]
-Description=Journexd Service
-After=network.target
-StartLimitIntervalSec=0
-
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=500
+StartLimitBurst=5
 [Service]
 Type=simple
-Restart=always
-RestartSec=1
-User=root
-WorkingDirectory=/opt/journexd
-ExecStart=/opt/journexd/journexd
-
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/local/bin/node_exporter --collector.logind --collector.systemd --web.listen-address=:9182
 [Install]
 WantedBy=multi-user.target
 EOF'`
-}
-
-func gitCloneCommand(s internal.Server, repo string) string {
-	return fmt.Sprintf(
-		"cd /opt && git clone https://%s:%s@github.com/%s.git",
-		s.GHUser,
-		s.GHPass,
-		repo,
-	)
 }

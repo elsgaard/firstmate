@@ -14,7 +14,7 @@ type Model struct{}
 
 func (m Model) Deploy(server internal.Server) error {
 	log.Printf("▶ Starting certmanager deploy on %s", server.FQDN)
-	return m.executeRemoteCommands(server, m.getInstallCommands())
+	return m.executeRemoteCommands(server, m.getInstallCommands(server))
 }
 
 func (m Model) Update(server internal.Server) error {
@@ -40,7 +40,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 			continue // `return err` to fail-fast, for now just continue
 		}
 		if len(out) > 0 {
-			log.Printf("Output: %s", strings.TrimSpace(string(out)))
+			log.Printf("→ Output: %s", strings.TrimSpace(string(out)))
 		}
 
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
@@ -53,28 +53,26 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 func (m Model) getUpdateCommands() []string {
 	return []string{
 		"cd /opt/certmanager/ && ./morph-tool",
-		"sudo systemctl stop certmanager.service",
+		"systemctl stop certmanager.service",
 		"git -C /opt/certmanager fetch --all --tags",
 		"git -C /opt/certmanager reset --hard origin/main",
-		"cd /opt/certmanager && sudo make build",
+		"cd /opt/certmanager && make build",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl restart certmanager.service",
+		"systemctl daemon-reload",
+		"systemctl restart certmanager.service",
 	}
 }
 
-func (m Model) getInstallCommands() []string {
+func (m Model) getInstallCommands(server internal.Server) []string {
 	return []string{
-		"sudo apt-get install build-essential -y",
-		"sudo apt install golang-go -y",
-		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/certmanager.git",
-		"cd /opt/certmanager && sudo make build",
+		gitCloneCommand(server, "TRUECOMMERCEDK/certmanager"),
+		"cd /opt/certmanager && make build",
 		"mkdir -p /etc/certmanager",
 		"mkdir -p /var/lib/certmanager",
 		"chmod 755 /var/lib/certmanager",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl enable --now certmanager.service",
+		"systemctl daemon-reload",
+		"systemctl enable --now certmanager.service",
 	}
 }
 
@@ -105,4 +103,13 @@ ExecStart=/opt/certmanager/certmanager --port=8087 --db-path=/var/lib/certmanage
 [Install]
 WantedBy=multi-user.target
 EOF'`
+}
+
+func gitCloneCommand(s internal.Server, repo string) string {
+	return fmt.Sprintf(
+		"cd /opt && git clone https://%s:%s@github.com/%s.git",
+		s.GHUser,
+		s.GHPass,
+		repo,
+	)
 }

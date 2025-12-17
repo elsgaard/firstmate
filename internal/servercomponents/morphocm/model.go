@@ -14,7 +14,7 @@ type Model struct{}
 
 func (m Model) Deploy(server internal.Server) error {
 	log.Printf("▶ Starting morpho cm deploy on %s", server.FQDN)
-	return m.executeRemoteCommands(server, m.getInstallCommands())
+	return m.executeRemoteCommands(server, m.getInstallCommands(server))
 }
 
 func (m Model) Update(server internal.Server) error {
@@ -40,7 +40,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 			continue // `return err` to fail-fast, for now just continue
 		}
 		if len(out) > 0 {
-			log.Printf("Output: %s", strings.TrimSpace(string(out)))
+			log.Printf("→ Output: %s", strings.TrimSpace(string(out)))
 		}
 
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
@@ -52,23 +52,20 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"cd /opt/morphocm/ && ./morph-tool",
 		"systemctl stop morphocm.service",
 		"git -C /opt/morphocm fetch --all --tags",
 		"git -C /opt/morphocm reset --hard origin/main",
-		"cd /opt/morphocm && sudo make build",
+		"cd /opt/morphocm && make build",
 		"CUSTOM: CreateUnitFile",
 		"systemctl daemon-reload",
 		"systemctl restart morphocm.service",
 	}
 }
 
-func (m Model) getInstallCommands() []string {
+func (m Model) getInstallCommands(server internal.Server) []string {
 	return []string{
-		"apt-get install build-essential",
-		"apt install golang-go -y",
-		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/morphocm.git",
-		"cd /opt/morphocm && sudo make build",
+		gitCloneCommand(server, "TRUECOMMERCEDK/morphocm"),
+		"cd /opt/morphocm && make build",
 		"mkdir -p /etc/morphocm",
 		"mkdir -p /var/lib/morphocm",
 		"chmod 755 /var/lib/morphocm",
@@ -105,4 +102,13 @@ ExecStart=/opt/morphocm/morphocm --port=8089 --db-path=/var/lib/morphocm/morphoc
 [Install]
 WantedBy=multi-user.target
 EOF'`
+}
+
+func gitCloneCommand(s internal.Server, repo string) string {
+	return fmt.Sprintf(
+		"cd /opt && git clone https://%s:%s@github.com/%s.git",
+		s.GHUser,
+		s.GHPass,
+		repo,
+	)
 }

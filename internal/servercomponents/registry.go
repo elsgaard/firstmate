@@ -10,6 +10,7 @@ import (
 	"github.com/elsgaard/firstmate/internal/servercomponents/edicheck"
 	"github.com/elsgaard/firstmate/internal/servercomponents/journexd"
 	"github.com/elsgaard/firstmate/internal/servercomponents/morphocm"
+	"github.com/elsgaard/firstmate/internal/servercomponents/nodeexp"
 	"github.com/elsgaard/firstmate/internal/servercomponents/prometheus"
 	"github.com/elsgaard/firstmate/internal/servercomponents/sftrip"
 	"github.com/elsgaard/firstmate/internal/servercomponents/ubuntu"
@@ -27,4 +28,5 @@ var Registry = map[string]func() Component{
 	"alertboard":   func() Component { return alertboard.Model{} },
 	"certmanager":  func() Component { return certmanager.Model{} },
 	"journexd":     func() Component { return journexd.Model{} },
+	"nodeexp":      func() Component { return nodeexp.Model{} },
 }

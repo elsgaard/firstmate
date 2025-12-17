@@ -14,7 +14,7 @@ type Model struct{}
 
 func (m Model) Deploy(server internal.Server) error {
 	log.Printf("▶ Starting Alerthistory deploy on %s", server.FQDN)
-	return m.executeRemoteCommands(server, m.getInstallCommands())
+	return m.executeRemoteCommands(server, m.getInstallCommands(server))
 }
 
 func (m Model) Update(server internal.Server) error {
@@ -40,7 +40,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 			continue // `return err` to fail-fast, for now just continue
 		}
 		if len(out) > 0 {
-			log.Printf("Output: %s", strings.TrimSpace(string(out)))
+			log.Printf("→ Output: %s", strings.TrimSpace(string(out)))
 		}
 
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
@@ -52,27 +52,26 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 
 func (m Model) getUpdateCommands() []string {
 	return []string{
-		"cd /opt/alerthistory/ && ./morph-tool",
-		"sudo systemctl stop alerthistory.service",
+		"systemctl stop alerthistory.service",
 		"git -C /opt/alerthistory fetch origin main",
 		"git -C /opt/alerthistory reset --hard origin/main",
-		"cd /opt/alerthistory && sudo make build",
+		"cd /opt/alerthistory && make build",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl restart alerthistory.service",
+		"systemctl daemon-reload",
+		"systemctl restart alerthistory.service",
 	}
 }
 
-func (m Model) getInstallCommands() []string {
+func (m Model) getInstallCommands(server internal.Server) []string {
 	return []string{
-		"cd /opt && sudo git clone https://github.com/TRUECOMMERCEDK/alerthistory.git",
-		"cd /opt/alerthistory && sudo make build",
+		gitCloneCommand(server, "TRUECOMMERCEDK/alerthistory"),
+		"cd /opt/alerthistory && make build",
 		"mkdir -p /etc/alerthistory",
 		"mkdir -p /var/lib/alerthistory",
 		"chmod 755 /var/lib/alerthistory",
 		"CUSTOM: CreateUnitFile",
-		"sudo systemctl daemon-reload",
-		"sudo systemctl enable --now alerthistory.service",
+		"systemctl daemon-reload",
+		"systemctl enable --now alerthistory.service",
 	}
 }
 
@@ -103,4 +102,13 @@ ExecStart=/opt/alerthistory/alerthistoryserver --port=8082 --db-path=/var/lib/al
 [Install]
 WantedBy=multi-user.target
 EOF'`
+}
+
+func gitCloneCommand(s internal.Server, repo string) string {
+	return fmt.Sprintf(
+		"cd /opt && git clone https://%s:%s@github.com/%s.git",
+		s.GHUser,
+		s.GHPass,
+		repo,
+	)
 }

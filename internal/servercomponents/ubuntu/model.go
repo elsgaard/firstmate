@@ -40,7 +40,7 @@ func (m Model) executeRemoteCommands(server internal.Server, cmds []string) erro
 			continue // `return err` to fail-fast, for now just continue
 		}
 		if len(out) > 0 {
-			log.Printf("Output: %s", strings.TrimSpace(string(out)))
+			log.Printf("→ Output: %s", strings.TrimSpace(string(out)))
 		}
 
 		time.Sleep(500 * time.Millisecond) // gentle pacing between commands
@@ -54,7 +54,6 @@ func (m Model) getUpdateCommands() []string {
 	return []string{
 		"apt update -y",
 		"apt upgrade -y",
-		"apt install sqlite3 -y",
 	}
 }
 
@@ -62,7 +61,9 @@ func (m Model) getInstallCommands() []string {
 	return []string{
 		"apt update -y",
 		"apt upgrade -y",
-		"apt install sqlite3 -y",
+		"apt install build-essential -y",
+		"apt install golang-go sqlite3 -y",
+		"git config --global credential.helper store",
 		"mkdir -p /etc/systemd/timesyncd.conf.d",
 		"CUSTOM: CreateNTPFile",
 		"timedatectl set-timezone Europe/Copenhagen",
