@@ -95,7 +95,7 @@ Restart=always
 RestartSec=1
 User=root
 WorkingDirectory=/opt/sftrip
-ExecStart=/opt/sftrip/sftrip --insecure-skip-hostkey=true --etcd-endpoints "http://10.15.91.217:2379,http://10.15.91.231:2379,http://10.15.91.224:2379"
+ExecStart=/opt/sftrip/sftrip --config=/etc/sftrip/sftrip.json --insecure-skip-hostkey=true --etcd-endpoints "http://10.15.91.217:2379,http://10.15.91.231:2379,http://10.15.91.224:2379"
 
 [Install]
 WantedBy=multi-user.target
